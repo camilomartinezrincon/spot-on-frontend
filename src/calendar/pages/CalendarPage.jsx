@@ -6,25 +6,28 @@ import {
   CalendarEventComponent,
   CalendarModalComponent,
 } from "../";
-import { addHours } from "date-fns";
+// import { addHours } from "date-fns";
 import { localizer } from "../../helpers";
 import "./CalendarPage.css";
+import { useUiStore, useCalendarStore } from "../../hooks";
 
-const events = [
-  {
-    title: "Reservation Camilo Martinez",
-    notes: "Camilo Martinez Birthday",
-    start: new Date(),
-    end: addHours(new Date(), 2),
-    bgColor: "#fafafafa",
-    user: {
-      _id: "testCode_123",
-      name: "Viviana Camargo",
-    },
-  },
-];
+// const events = [
+//   {
+//     title: "Reservation Camilo Martinez",
+//     notes: "Camilo Martinez Birthday",
+//     start: new Date(),
+//     end: addHours(new Date(), 2),
+//     bgColor: "#fafafafa",
+//     user: {
+//       _id: "testCode_123",
+//       name: "Viviana Camargo",
+//     },
+//   },
+// ];
 
 export const CalendarPage = () => {
+  const { openCalendarModal } = useUiStore();
+  const { events, setActiveEvent } = useCalendarStore();
   const [view, setView] = useState(localStorage.getItem("lastView") || "week");
 
   const eventStyleGetter = (event, start, end, isSelected) => {
@@ -38,11 +41,11 @@ export const CalendarPage = () => {
   };
 
   const onDoubleClick = (event) => {
-    console.log({ doubleClick: event });
+    openCalendarModal();
   };
 
   const onSelect = (event) => {
-    console.log({ click: event });
+    setActiveEvent(event);
   };
 
   const onViewChanged = (event) => {
