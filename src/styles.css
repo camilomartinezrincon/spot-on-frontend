@@ -6,7 +6,6 @@ body,
   padding: 0;
 }
 
-/* CalendarModalComponent Styles */
 .ReactModalPortal > div {
   opacity: 0;
 }
@@ -45,4 +44,30 @@ body,
   max-width: 500px;
   outline: none;
   padding: 10px;
+}
+
+.fab {
+  align-items: center;
+  border-radius: 50%;
+  bottom: 25px;
+  display: flex;
+  font-size: 24px;
+  height: 56px;
+  justify-content: center;
+  position: fixed;
+  right: 25px;
+  width: 56px;
+}
+
+.fab-danger {
+  align-items: center;
+  border-radius: 50%;
+  bottom: 25px;
+  display: flex;
+  font-size: 19px;
+  height: 42px;
+  justify-content: center;
+  position: fixed;
+  left: 84px;
+  width: 42px;
 }

@@ -5,8 +5,9 @@ import {
   NavbarComponent,
   CalendarEventComponent,
   CalendarModalComponent,
+  FabAddNewComponent,
+  FabDeleteComponent,
 } from "../";
-// import { addHours } from "date-fns";
 import { localizer } from "../../helpers";
 import "./CalendarPage.css";
 import { useUiStore, useCalendarStore } from "../../hooks";
@@ -73,6 +74,8 @@ export const CalendarPage = () => {
           onSelectEvent={onSelect}
         />
         <CalendarModalComponent />
+        <FabAddNewComponent />
+        <FabDeleteComponent />
       </div>
     </>
   );
