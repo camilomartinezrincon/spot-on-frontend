@@ -1,0 +1,73 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ReactModalPortal > div {
+  opacity: 0;
+}
+
+.ReactModalPortal .ReactModal__Overlay {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 999;
+}
+
+.modal-background {
+  background-color: rgba(0, 0, 0, 0.3);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  position: fixed;
+}
+
+.ReactModalPortal .ReactModal__Overlay--after-open {
+  opacity: 1;
+}
+
+.ReactModalPortal .ReactModal__Overlay--before-close {
+  opacity: 0;
+}
+
+.modal {
+  background: white;
+  border-radius: 5px;
+  color: rgb(51, 51, 51);
+  display: inline;
+  max-height: 620px;
+  max-width: 500px;
+  outline: none;
+  padding: 10px;
+}
+
+.fab {
+  align-items: center;
+  border-radius: 50%;
+  bottom: 25px;
+  display: flex;
+  font-size: 24px;
+  height: 56px;
+  justify-content: center;
+  position: fixed;
+  right: 25px;
+  width: 56px;
+}
+
+.fab-danger {
+  align-items: center;
+  border-radius: 50%;
+  bottom: 25px;
+  display: flex;
+  font-size: 19px;
+  height: 42px;
+  justify-content: center;
+  position: fixed;
+  left: 84px;
+  width: 42px;
+}

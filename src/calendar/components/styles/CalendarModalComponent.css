@@ -1,0 +1,17 @@
+.react-datepicker__time-container {
+  border-left: 1px solid #aeaeae !important;
+}
+
+.react-datepicker__time-list {
+  padding: 0 !important;
+  height: 200px !important;
+}
+
+.react-datepicker__time-list-item {
+  padding: 5px 10px !important;
+  height: auto !important;
+}
+
+.react-datepicker__time-box {
+  border-right: 1px solid #aeaeae !important;
+}
