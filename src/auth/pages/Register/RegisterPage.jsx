@@ -34,6 +34,12 @@ export const RegisterPage = () => {
       password: registerPassword,
     });
     if (registerResult?.ok) {
+      await Swal.fire({
+        title: "Registration Successful",
+        text: "Your account has been created. Please log in to continue.",
+        icon: "success",
+        confirmButtonText: "Go to Login",
+      });
       navigate("/auth/login");
     }
   };

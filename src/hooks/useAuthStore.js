@@ -28,14 +28,13 @@ export const useAuthStore = () => {
   const startRegister = async ({ email, password, fullName }) => {
     dispatch(onChecking());
     try {
-      const { data } = await spotOnApi.post("/auth/new/client", {
+      await spotOnApi.post("/auth/new/client", {
         email,
         password,
         fullName,
       });
-      localStorage.setItem("token", data.token);
 
-      dispatch(onLogin({ uid: data.uid }));
+      dispatch(onLogout());
     } catch (error) {
       console.log({ error });
       dispatch(onLogout(error.response.data?.msg || "Register Error"));
