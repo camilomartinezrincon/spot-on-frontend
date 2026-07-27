@@ -47,7 +47,7 @@ export const useAuthStore = () => {
 
   const checkAuthToken = useCallback(async () => {
     const token = localStorage.getItem("token");
-    if (!token) return dispatch(onLogout("Expired Token"));
+    if (!token) return dispatch(onLogout());
 
     try {
       const { data } = await spotOnApi.get("/auth/renew");

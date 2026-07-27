@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./RegisterPage.css";
 import { useAuthStore, useForm } from "../../../hooks";
 import Swal from "sweetalert2";
@@ -20,18 +20,22 @@ export const RegisterPage = () => {
   } = useForm(registerFormFields);
 
   const { startRegister } = useAuthStore();
+  const navigate = useNavigate();
 
-  const registerOnSubmit = (event) => {
+  const registerOnSubmit = async (event) => {
     event.preventDefault();
     if (registerPassword !== registerRepeatPassword) {
       Swal.fire("Register Error", "Passwords do not match", "error");
       return;
     }
-    startRegister({
+    const registerResult = await startRegister({
       fullName: registerFullName,
       email: registerEmail,
       password: registerPassword,
     });
+    if (registerResult?.ok) {
+      navigate("/auth/login");
+    }
   };
 
   return (
