@@ -27,7 +27,7 @@ export const useCalendarStore = () => {
         reservationDateTime: calendarEvent.start,
         numberOfGuests: Number(calendarEvent.numberOfGuests),
         notes: calendarEvent.notes,
-        restaurant: "6a6266df2d3118e9d3dfb3af",
+        restaurant: calendarEvent.restaurant,
       };
       try {
         const { data } = await spotOnApi.post(
@@ -35,9 +35,7 @@ export const useCalendarStore = () => {
           payload,
         );
         console.log({ data });
-        dispatch(
-          onAddNewEvent({ ...calendarEvent, id: data.events._id, user }),
-        );
+        dispatch(onAddNewEvent({ ...calendarEvent, id: data.event._id, user }));
       } catch (error) {
         Swal.fire(
           "Error saving reservation",

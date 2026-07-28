@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
@@ -8,29 +9,18 @@ import {
   FabAddNewComponent,
   FabDeleteComponent,
 } from "../";
+import { useUiStore, useCalendarStore, useAuthStore } from "../../hooks";
 import { localizer } from "../../helpers";
 import "./CalendarPage.css";
-import { useUiStore, useCalendarStore } from "../../hooks";
-
-// const events = [
-//   {
-//     title: "Reservation Camilo Martinez",
-//     notes: "Camilo Martinez Birthday",
-//     start: new Date(),
-//     end: addHours(new Date(), 2),
-//     bgColor: "#fafafafa",
-//     user: {
-//       _id: "testCode_123",
-//       name: "Viviana Camargo",
-//     },
-//   },
-// ];
 
 export const CalendarPage = () => {
+  const navigate = useNavigate();
   const { openCalendarModal } = useUiStore();
   const { events, setActiveEvent } = useCalendarStore();
+  const { user } = useAuthStore();
   const [view, setView] = useState(localStorage.getItem("lastView") || "week");
 
+  // eslint-disable-next-line no-unused-vars
   const eventStyleGetter = (event, start, end, isSelected) => {
     const style = {
       backgroundColor: "#347CF7",
@@ -41,6 +31,7 @@ export const CalendarPage = () => {
     return { style };
   };
 
+  // eslint-disable-next-line no-unused-vars
   const onDoubleClick = (event) => {
     openCalendarModal();
   };
@@ -57,13 +48,22 @@ export const CalendarPage = () => {
   return (
     <>
       <NavbarComponent />
-      <div style={{ height: "calc(100vh - 80px)" }}>
+      <div className="calendar-page-container">
+        {user?.role === "CLIENT" && (
+          <button
+            type="button"
+            className="btn btn-link mb-3 text-muted text-decoration-none back-to-restaurants-btn"
+            onClick={() => navigate("/")}
+          >
+            <i className="fa fa-arrow-left me-1"></i> Back to restaurants
+          </button>
+        )}
         <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: "100%" }}
+          className="calendar-page-inner"
           view={view}
           onView={onViewChanged}
           eventPropGetter={eventStyleGetter}
@@ -74,7 +74,7 @@ export const CalendarPage = () => {
           onSelectEvent={onSelect}
         />
         <CalendarModalComponent />
-        <FabAddNewComponent />
+        {/* <FabAddNewComponent /> */}
         <FabDeleteComponent />
       </div>
     </>

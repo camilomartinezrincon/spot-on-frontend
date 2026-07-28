@@ -75,7 +75,6 @@ export const LandingPage = () => {
 
   const onScheduleVisit = (restaurant) => {
     navigate(`/reservations/new/${restaurant._id}`);
-    console.log(`Restaurant ID: ${restaurant._id}`);
   };
 
   return (

@@ -1,0 +1,11 @@
+.calendar-page-container {
+  height: calc(100vh - 80px);
+}
+
+.calendar-page-inner {
+  height: 100%;
+}
+
+.back-to-restaurants-btn {
+  padding-left: 16px;
+}

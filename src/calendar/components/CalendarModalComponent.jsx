@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useCalendarStore, useUiStore } from "../../hooks";
+import { useAuthStore, useCalendarStore, useUiStore } from "../../hooks";
 import Modal from "react-modal";
 import DatePicker from "react-datepicker";
 import Swal from "sweetalert2";
@@ -20,9 +20,18 @@ const customStyles = {
 
 Modal.setAppElement("#root");
 
+const tableOptions = Array.from({ length: 15 }, (_, i) => i + 1);
+const statusOptions = [
+  "New Reservation",
+  "Confirmed Reservation",
+  "Cancelled Reservation",
+];
+
 export const CalendarModalComponent = () => {
   const { isCalendarModalOpen, closeCalendarModal } = useUiStore();
   const { activeEvent, startSavingEvent } = useCalendarStore();
+  const { user } = useAuthStore();
+  const isEmployee = user?.role === "EMPLOYEE";
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   //TODO: change this is just for testing
@@ -57,6 +66,9 @@ export const CalendarModalComponent = () => {
       [target.name]: target.value,
     });
   };
+
+  const isReservationConfirmedWithTable =
+    !!formValues.tableNumber && formValues.status === "Confirmed Reservation";
 
   const onDateChanged = (event, changing) => {
     setFormValues({
@@ -93,9 +105,6 @@ export const CalendarModalComponent = () => {
       return;
     }
 
-    console.log(formValues);
-
-    //TODO:
     await startSavingEvent(formValues);
     closeCalendarModal();
     setFormSubmitted(false);
@@ -167,6 +176,61 @@ export const CalendarModalComponent = () => {
             How many people is this reservation for
           </small>
         </div>
+
+        {(isEmployee || isReservationConfirmedWithTable) && (
+          <div className="form-group mb-2">
+            <label>Table number</label>
+            {isEmployee ? (
+              <select
+                className="form-control"
+                name="tableNumber"
+                value={formValues.tableNumber}
+                onChange={onInputChanged}
+              >
+                <option value="">Select a table</option>
+                {tableOptions.map((table) => (
+                  <option key={table} value={table}>
+                    Table {table}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                className="form-control"
+                value={`Table ${formValues.tableNumber}`}
+                readOnly
+              />
+            )}
+          </div>
+        )}
+
+        {(isEmployee || isReservationConfirmedWithTable) && (
+          <div className="form-group mb-2">
+            <label>Status</label>
+            {isEmployee ? (
+              <select
+                className="form-control"
+                name="status"
+                value={formValues.status}
+                onChange={onInputChanged}
+              >
+                {statusOptions.map((statusOption) => (
+                  <option key={statusOption} value={statusOption}>
+                    {statusOption}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                className="form-control"
+                value={formValues.status}
+                readOnly
+              />
+            )}
+          </div>
+        )}
 
         <div className="form-group mb-2">
           <textarea

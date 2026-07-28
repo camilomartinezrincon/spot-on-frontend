@@ -1,4 +1,5 @@
 import { useCalendarStore } from "../../hooks";
+import "./styles/FabDeleteComponent.css";
 
 export const FabDeleteComponent = () => {
   const { startDeletingEvent, hasEventSelected } = useCalendarStore();
@@ -9,7 +10,7 @@ export const FabDeleteComponent = () => {
 
   return (
     <button
-      className="btn btn-danger fab-danger"
+      className={`btn btn-danger fab ${hasEventSelected ? "fab-visible" : "fab-hidden"}`}
       onClick={handleDelete}
       style={{ display: hasEventSelected ? "" : "none" }}
     >

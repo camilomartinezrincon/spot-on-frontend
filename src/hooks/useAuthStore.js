@@ -18,7 +18,7 @@ export const useAuthStore = () => {
           uid: data.uid,
           fullName: data.fullName,
           role: data.role,
-          restaurantId: data.restaurantId,
+          restaurant: data.restaurant,
         }),
       );
     } catch (error) {
@@ -65,7 +65,7 @@ export const useAuthStore = () => {
           uid: data.uid,
           fullName: data.fullName,
           role: data.role,
-          restaurantId: data.restaurantId,
+          restaurant: data.restaurant,
         }),
       );
     } catch (error) {
