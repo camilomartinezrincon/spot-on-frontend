@@ -1,4 +1,3 @@
-import { addHours, differenceInSeconds } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useCalendarStore, useUiStore } from "../../hooks";
 import Modal from "react-modal";
@@ -30,8 +29,8 @@ export const CalendarModalComponent = () => {
   const [formValues, setFormValues] = useState({
     title: "",
     notes: "",
-    start: new Date(),
-    end: addHours(new Date(), 2),
+    start: null,
+    numberOfGuests: "",
   });
 
   const titleClass = useMemo(() => {
@@ -46,6 +45,11 @@ export const CalendarModalComponent = () => {
       }, 0);
     }
   }, [activeEvent]);
+
+  const guestsClass = useMemo(() => {
+    if (!formSubmitted) return "";
+    return formValues.numberOfGuests > 0 ? "is-valid" : "is-invalid";
+  }, [formValues.numberOfGuests, formSubmitted]);
 
   const onInputChanged = ({ target }) => {
     setFormValues({
@@ -68,14 +72,26 @@ export const CalendarModalComponent = () => {
   const onSubmit = async (event) => {
     event.preventDefault();
     setFormSubmitted(true);
-    const difference = differenceInSeconds(formValues.end, formValues.start);
 
-    if (isNaN(difference) || difference <= 0) {
-      Swal.fire("Incorrect dates", "Check the input dates", "error");
+    if (!formValues.start) {
+      Swal.fire("Incorrect date", "Select a start date & time", "error");
       return;
     }
 
     if (formValues.title.length <= 0) return;
+
+    if (
+      formValues.numberOfGuests === "" ||
+      isNaN(formValues.numberOfGuests) ||
+      Number(formValues.numberOfGuests) <= 0
+    ) {
+      Swal.fire(
+        "Incorrect number of guests",
+        "Check the number of guests",
+        "error",
+      );
+      return;
+    }
 
     console.log(formValues);
 
@@ -98,6 +114,23 @@ export const CalendarModalComponent = () => {
       <hr />
       <form className="container" onSubmit={onSubmit}>
         <div className="form-group mb-2">
+          <label>Title</label>
+          <input
+            type="text"
+            className={`form-control ${titleClass}`}
+            placeholder="Event title"
+            name="title"
+            autoComplete="off"
+            value={formValues.title}
+            onChange={onInputChanged}
+            aria-describedby="titleHelp"
+          />
+          <small id="titleHelp" className="form-text text-muted">
+            A short description
+          </small>
+        </div>
+
+        <div className="form-group mb-2">
           <label>Start date & time</label>
           <DatePicker
             minDate={new Date()}
@@ -109,6 +142,7 @@ export const CalendarModalComponent = () => {
             dateFormat="Pp"
             wrapperClassName="w-50 d-block"
             showTimeSelect
+            placeholderText="Select a date & time"
             popperPlacement="bottom-start"
             popperProps={{
               strategy: "fixed",
@@ -117,37 +151,20 @@ export const CalendarModalComponent = () => {
         </div>
 
         <div className="form-group mb-2">
-          <label>End date & time</label>
-          <DatePicker
-            minDate={formValues.start}
-            minTime={formValues.start}
-            maxTime={new Date(new Date(formValues.end).setHours(18, 0, 0, 0))}
-            selected={formValues.end}
-            className="form-control"
-            onChange={(event) => onDateChanged(event, "end")}
-            dateFormat="Pp"
-            wrapperClassName="w-50 d-block"
-            showTimeSelect
-            popperPlacement="bottom-start"
-            popperProps={{
-              strategy: "fixed",
-            }}
-          />
-        </div>
-
-        <div className="form-group mb-2">
-          <label>Title and notes</label>
+          <label>Number of guests</label>
           <input
-            type="text"
-            className={`form-control ${titleClass}`}
-            placeholder="Event title"
-            name="title"
+            type="number"
+            min="1"
+            className={`form-control ${guestsClass}`}
+            placeholder="Number of guests"
+            name="numberOfGuests"
             autoComplete="off"
-            value={formValues.title}
+            value={formValues.numberOfGuests}
             onChange={onInputChanged}
+            aria-describedby="guestsHelp"
           />
-          <small id="emailHelp" className="form-text text-muted">
-            A short description
+          <small id="guestsHelp" className="form-text text-muted">
+            How many people is this reservation for
           </small>
         </div>
 
@@ -160,8 +177,9 @@ export const CalendarModalComponent = () => {
             name="notes"
             value={formValues.notes}
             onChange={onInputChanged}
+            aria-describedby="notesHelp"
           ></textarea>
-          <small id="emailHelp" className="form-text text-muted">
+          <small id="notesHelp" className="form-text text-muted">
             Additional information
           </small>
         </div>

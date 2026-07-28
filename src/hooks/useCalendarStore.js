@@ -5,20 +5,47 @@ import {
   onSetActiveEvent,
   onUpdateEvent,
 } from "../store";
+import { spotOnApi } from "../api";
+import Swal from "sweetalert2";
 
 export const useCalendarStore = () => {
   const dispatch = useDispatch();
   const { events, activeEvent } = useSelector((state) => state.calendar);
+  const { user } = useSelector((state) => state.auth);
   const setActiveEvent = (calendarEvent) => {
     dispatch(onSetActiveEvent(calendarEvent));
   };
 
   const startSavingEvent = async (calendarEvent) => {
-    // ToDo: connect with the backend.
     if (calendarEvent._id) {
+      // TODO: update
       dispatch(onUpdateEvent({ ...calendarEvent }));
     } else {
-      dispatch(onAddNewEvent({ ...calendarEvent, _id: new Date().getTime() }));
+      const payload = {
+        eventTitle: calendarEvent.title,
+        customerName: user.fullName,
+        reservationDateTime: calendarEvent.start,
+        numberOfGuests: Number(calendarEvent.numberOfGuests),
+        notes: calendarEvent.notes,
+        restaurant: "6a6266df2d3118e9d3dfb3af",
+      };
+      try {
+        const { data } = await spotOnApi.post(
+          "/events/new/reservation",
+          payload,
+        );
+        console.log({ data });
+        dispatch(
+          onAddNewEvent({ ...calendarEvent, id: data.events._id, user }),
+        );
+      } catch (error) {
+        Swal.fire(
+          "Error saving reservation",
+          error.response?.data?.msg || "Something went wrong, please try again",
+          "error",
+        );
+        throw error;
+      }
     }
   };
 

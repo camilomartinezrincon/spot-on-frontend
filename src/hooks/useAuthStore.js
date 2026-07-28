@@ -13,7 +13,14 @@ export const useAuthStore = () => {
       const { data } = await spotOnApi.post("/auth/login", { email, password });
       localStorage.setItem("token", data.token);
 
-      dispatch(onLogin({ uid: data.uid, fullName: data.fullName }));
+      dispatch(
+        onLogin({
+          uid: data.uid,
+          fullName: data.fullName,
+          role: data.role,
+          restaurantId: data.restaurantId,
+        }),
+      );
     } catch (error) {
       console.log({ error });
       dispatch(
@@ -35,12 +42,14 @@ export const useAuthStore = () => {
       });
 
       dispatch(onLogout());
+      return { ok: true };
     } catch (error) {
       console.log({ error });
       dispatch(onLogout(error.response.data?.msg || "Register Error"));
       setTimeout(() => {
         dispatch(clearErrorMessage());
       }, 10);
+      return { ok: false };
     }
   };
 
@@ -51,7 +60,14 @@ export const useAuthStore = () => {
     try {
       const { data } = await spotOnApi.get("/auth/renew");
       localStorage.setItem("token", data.token);
-      dispatch(onLogin({ uid: data.uid, fullName: data.fullName }));
+      dispatch(
+        onLogin({
+          uid: data.uid,
+          fullName: data.fullName,
+          role: data.role,
+          restaurantId: data.restaurantId,
+        }),
+      );
     } catch (error) {
       localStorage.clear();
       dispatch(onLogout(error.response.data?.msg || "Expired Token"));

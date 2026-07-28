@@ -3,9 +3,10 @@ import { LoginPage, RegisterPage } from "../auth";
 import { CalendarPage } from "../calendar";
 import { useAuthStore } from "../hooks";
 import { useEffect } from "react";
+import { LandingPage } from "../landing";
 
 export const AppRouter = () => {
-  const { status, checkAuthToken } = useAuthStore();
+  const { status, user, checkAuthToken } = useAuthStore();
   useEffect(() => {
     checkAuthToken();
   }, [checkAuthToken]);
@@ -13,6 +14,9 @@ export const AppRouter = () => {
   if (status === "checking") {
     return <h3>Loading...</h3>;
   }
+  const isClient = user?.role === "CLIENT";
+  console.log({ user, isClient });
+
   return (
     <Routes>
       {status === "not-authenticated" ? (
@@ -23,8 +27,12 @@ export const AppRouter = () => {
         </>
       ) : (
         <>
-          <Route path="/" element={<CalendarPage />} />
-          <Route path="/*" element={<Navigate to={"/"} />} />
+          <Route path="/reservations" element={<CalendarPage />} />
+          {isClient && <Route path="/" element={<LandingPage />} />}
+          <Route
+            path="/*"
+            element={<Navigate to={isClient ? "/" : "/reservations"} />}
+          />
         </>
       )}
     </Routes>
