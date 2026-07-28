@@ -35,12 +35,14 @@ export const useAuthStore = () => {
       });
 
       dispatch(onLogout());
+      return { ok: true };
     } catch (error) {
       console.log({ error });
       dispatch(onLogout(error.response.data?.msg || "Register Error"));
       setTimeout(() => {
         dispatch(clearErrorMessage());
       }, 10);
+      return { ok: false };
     }
   };
 
