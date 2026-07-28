@@ -13,7 +13,13 @@ export const NewReservationPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
   const { user } = useAuthStore();
-  const { events, activeEvent, startSavingEvent } = useCalendarStore();
+  const {
+    events,
+    activeEvent,
+    startSavingEvent,
+    startLoadingEvents,
+    setActiveEvent,
+  } = useCalendarStore();
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
   const isEmployee = user?.role === "EMPLOYEE";
@@ -94,7 +100,6 @@ export const NewReservationPage = () => {
         );
         setRestaurant(data.restaurant);
       } catch (error) {
-        console.log({ error });
         Swal.fire(
           "Error loading restaurant",
           error.response?.data?.msg || "Something went wrong, please try again",
@@ -104,6 +109,14 @@ export const NewReservationPage = () => {
     };
     if (restaurantId) fetchRestaurant();
   }, [restaurantId]);
+
+  useEffect(() => {
+    startLoadingEvents();
+  }, [startLoadingEvents]);
+
+  useEffect(() => {
+    setActiveEvent(null);
+  }, [setActiveEvent]);
 
   //INFO: Check table abailability based on selected date and time
   const occupiedTables = useMemo(() => {
@@ -209,6 +222,16 @@ export const NewReservationPage = () => {
           </button>
         )}
 
+        {isEmployee && (
+          <button
+            type="button"
+            className="btn btn-link p-0 mb-3 text-muted text-decoration-none"
+            onClick={() => navigate("/reservations")}
+          >
+            <i className="fa fa-arrow-left me-1"></i> Back to calendar
+          </button>
+        )}
+
         {!isEmployee && <h1 className="fw-bold mb-1">Schedule your visit</h1>}
         {isEmployee && (
           <h1 className="fw-bold mb-1">Schedule your client's visit</h1>
@@ -280,48 +303,6 @@ export const NewReservationPage = () => {
             </div>
           )}
 
-          {isEmployee && (
-            <div className="form-group mb-2">
-              <label>Table number</label>
-              <select
-                className="form-control"
-                name="tableNumber"
-                value={formValues.tableNumber}
-                onChange={onInputChanged}
-              >
-                <option value="">Select a table</option>
-                {tableOptions.map((table) => (
-                  <option
-                    key={table}
-                    value={table}
-                    disabled={occupiedTables.includes(table)}
-                  >
-                    Table {table}{" "}
-                    {occupiedTables.includes(table) ? "(Taken)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {isEmployee && (
-            <div className="form-group mb-2">
-              <label>Status</label>
-              <select
-                className="form-control"
-                name="status"
-                value={formValues.status}
-                onChange={onInputChanged}
-              >
-                {statusOptions.map((statusOption) => (
-                  <option key={statusOption} value={statusOption}>
-                    {statusOption}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div className="form-group mb-2">
             <label>Start date & time</label>
             <DatePicker
@@ -368,6 +349,48 @@ export const NewReservationPage = () => {
             />
           </div>
 
+          {isEmployee && (
+            <div className="form-group mb-2">
+              <label>Table number</label>
+              <select
+                className="form-control"
+                name="tableNumber"
+                value={formValues.tableNumber}
+                onChange={onInputChanged}
+              >
+                <option value="">Select a table</option>
+                {tableOptions.map((table) => (
+                  <option
+                    key={table}
+                    value={table}
+                    disabled={occupiedTables.includes(table)}
+                  >
+                    Table {table}{" "}
+                    {occupiedTables.includes(table) ? "(Taken)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isEmployee && (
+            <div className="form-group mb-2">
+              <label>Status</label>
+              <select
+                className="form-control"
+                name="status"
+                value={formValues.status}
+                onChange={onInputChanged}
+              >
+                {statusOptions.map((statusOption) => (
+                  <option key={statusOption} value={statusOption}>
+                    {statusOption}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="form-group mb-2">
             <label>Number of guests</label>
             <input
@@ -387,6 +410,7 @@ export const NewReservationPage = () => {
           </div>
 
           <div className="form-group mb-2">
+            <label>Notes</label>
             <textarea
               type="text"
               className="form-control"

@@ -139,6 +139,18 @@ export const CalendarModalComponent = () => {
           </small>
         </div>
 
+        {isEmployee && (
+          <div className="form-group mb-2">
+            <label>Client name</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formValues.customerName}
+              readOnly
+            />
+          </div>
+        )}
+
         <div className="form-group mb-2">
           <label>Start date & time</label>
           <DatePicker
@@ -233,6 +245,7 @@ export const CalendarModalComponent = () => {
         )}
 
         <div className="form-group mb-2">
+          <label>Notes</label>
           <textarea
             type="text"
             className="form-control"

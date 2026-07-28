@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -16,7 +16,7 @@ import "./CalendarPage.css";
 export const CalendarPage = () => {
   const navigate = useNavigate();
   const { openCalendarModal } = useUiStore();
-  const { events, setActiveEvent } = useCalendarStore();
+  const { events, setActiveEvent, startLoadingEvents } = useCalendarStore();
   const { user } = useAuthStore();
   const [view, setView] = useState(localStorage.getItem("lastView") || "week");
 
@@ -44,6 +44,10 @@ export const CalendarPage = () => {
     setView(event);
     localStorage.setItem("lastView", event);
   };
+
+  useEffect(() => {
+    startLoadingEvents();
+  }, [startLoadingEvents]);
 
   return (
     <>

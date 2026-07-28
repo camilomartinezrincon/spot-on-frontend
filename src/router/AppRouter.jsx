@@ -16,7 +16,6 @@ export const AppRouter = () => {
     return <h3>Loading...</h3>;
   }
   const isClient = user?.role === "CLIENT";
-  console.log({ user, isClient });
 
   return (
     <Routes>
