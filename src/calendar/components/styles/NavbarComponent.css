@@ -1,0 +1,12 @@
+.my-reservations-btn {
+  color: #ffff !important;
+  border: 1px solid #ffff;
+  background-color: transparent;
+  margin-right: 12px;
+}
+
+.my-reservations-btn:hover {
+  background-color: #0d6efd;
+  color: #ffff !important;
+  border-color: #0d6efd;
+}

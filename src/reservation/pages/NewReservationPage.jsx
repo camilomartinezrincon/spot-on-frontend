@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCalendarStore } from "../../hooks";
+import { useAuthStore, useCalendarStore } from "../../hooks";
 import { NavbarComponent } from "../../calendar";
 import { spotOnApi } from "../../api";
 import DatePicker from "react-datepicker";
@@ -10,11 +10,20 @@ import Swal from "sweetalert2";
 import "./NewReservationPage.css";
 
 export const NewReservationPage = () => {
-  const { restaurantId } = useParams();
   const navigate = useNavigate();
-  const { activeEvent, startSavingEvent } = useCalendarStore();
+  const { restaurantId } = useParams();
+  const { user } = useAuthStore();
+  const { events, activeEvent, startSavingEvent } = useCalendarStore();
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
+  const isEmployee = user?.role === "EMPLOYEE";
+
+  const tableOptions = Array.from({ length: 15 }, (_, i) => i + 1);
+  const statusOptions = [
+    "New Reservation",
+    "Confirmed Reservation",
+    "Cancelled Reservation",
+  ];
 
   const statusDotClass = {
     ACTIVE: "status-dot--active",
@@ -43,12 +52,38 @@ export const NewReservationPage = () => {
     return `${symbol} - ${formattedLabel}`;
   };
 
-  //TODO: change this is just for testing
+  const parseOperatingHours = (operatingHours) => {
+    if (!operatingHours) return null;
+
+    const timeMatch = operatingHours.match(
+      /(\d{1,2}:\d{2}\s?[APap][Mm])\s*-\s*(\d{1,2}:\d{2}\s?[APap][Mm])/,
+    );
+    if (!timeMatch) return null;
+
+    const parseTime = (timeStr) => {
+      const [, hours, minutes, meridiem] = timeStr.match(
+        /(\d{1,2}):(\d{2})\s?([APap][Mm])/,
+      );
+      let h = parseInt(hours, 10);
+      if (meridiem.toUpperCase() === "PM" && h !== 12) h += 12;
+      if (meridiem.toUpperCase() === "AM" && h === 12) h = 0;
+      return { hours: h, minutes: parseInt(minutes, 10) };
+    };
+
+    return {
+      open: parseTime(timeMatch[1]),
+      close: parseTime(timeMatch[2]),
+    };
+  };
+
   const [formValues, setFormValues] = useState({
     title: "",
     notes: "",
     start: null,
     numberOfGuests: "",
+    customerName: "",
+    tableNumber: "",
+    status: "New Reservation",
   });
 
   useEffect(() => {
@@ -69,6 +104,21 @@ export const NewReservationPage = () => {
     };
     if (restaurantId) fetchRestaurant();
   }, [restaurantId]);
+
+  //INFO: Check table abailability based on selected date and time
+  const occupiedTables = useMemo(() => {
+    if (!formValues.start) return [];
+
+    const selectedDay = new Date(formValues.start).toDateString();
+
+    return events
+      .filter((ev) => {
+        const isSameDay = new Date(ev.start).toDateString() === selectedDay;
+        const isDifferentReservation = ev._id !== activeEvent?._id;
+        return isSameDay && isDifferentReservation && ev.tableNumber;
+      })
+      .map((ev) => Number(ev.tableNumber));
+  }, [events, formValues.start, activeEvent]);
 
   const titleClass = useMemo(() => {
     if (!formSubmitted) return "";
@@ -111,6 +161,11 @@ export const NewReservationPage = () => {
       return;
     }
 
+    if (isEmployee && formValues.customerName.trim().length <= 0) {
+      Swal.fire("Missing client name", "Enter the client's name", "error");
+      return;
+    }
+
     if (formValues.title.length <= 0) return;
 
     if (
@@ -126,31 +181,43 @@ export const NewReservationPage = () => {
       return;
     }
 
-    console.log(formValues);
-
-    //TODO:
-    await startSavingEvent({ ...formValues, restaurant: restaurantId });
-    setFormSubmitted(false);
+    try {
+      await startSavingEvent({ ...formValues, restaurant: restaurantId });
+      await Swal.fire({
+        title: "Reservation created",
+        text: "Your reservation was booked successfully.",
+        icon: "success",
+        confirmButtonText: "Go to my reservations",
+      });
+      navigate("/reservations");
+    } catch (error) {
+      console.error({ error });
+    }
   };
 
   return (
     <>
       <NavbarComponent />
-      <div className="container py-4" style={{ maxWidth: "700px" }}>
-        <button
-          type="button"
-          className="btn btn-link p-0 mb-3 text-muted text-decoration-none"
-          onClick={() => navigate("/")}
-        >
-          <i className="fa fa-arrow-left me-1"></i> Back to restaurants
-        </button>
+      <div className="container py-4 new-reservation-container">
+        {!isEmployee && (
+          <button
+            type="button"
+            className="btn btn-link p-0 mb-3 text-muted text-decoration-none"
+            onClick={() => navigate("/")}
+          >
+            <i className="fa fa-arrow-left me-1"></i> Back to restaurants
+          </button>
+        )}
 
-        <h1 className="fw-bold mb-1">Schedule your visit</h1>
+        {!isEmployee && <h1 className="fw-bold mb-1">Schedule your visit</h1>}
+        {isEmployee && (
+          <h1 className="fw-bold mb-1">Schedule your client's visit</h1>
+        )}
         <p className="text-muted mb-4">
           Pick a date and time, then share a few details for your reservation.
         </p>
 
-        {restaurant && (
+        {restaurant && !isEmployee && (
           <div className="card mb-4">
             <div className="card-body">
               <div className="d-flex align-items-center justify-content-between mb-2">
@@ -194,16 +261,99 @@ export const NewReservationPage = () => {
             </small>
           </div>
 
+          {isEmployee && (
+            <div className="form-group mb-2">
+              <label>Client name</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Client's full name"
+                name="customerName"
+                autoComplete="off"
+                value={formValues.customerName}
+                onChange={onInputChanged}
+                aria-describedby="customerNameHelp"
+              />
+              <small id="customerNameHelp" className="form-text text-muted">
+                Who is this reservation for
+              </small>
+            </div>
+          )}
+
+          {isEmployee && (
+            <div className="form-group mb-2">
+              <label>Table number</label>
+              <select
+                className="form-control"
+                name="tableNumber"
+                value={formValues.tableNumber}
+                onChange={onInputChanged}
+              >
+                <option value="">Select a table</option>
+                {tableOptions.map((table) => (
+                  <option
+                    key={table}
+                    value={table}
+                    disabled={occupiedTables.includes(table)}
+                  >
+                    Table {table}{" "}
+                    {occupiedTables.includes(table) ? "(Taken)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isEmployee && (
+            <div className="form-group mb-2">
+              <label>Status</label>
+              <select
+                className="form-control"
+                name="status"
+                value={formValues.status}
+                onChange={onInputChanged}
+              >
+                {statusOptions.map((statusOption) => (
+                  <option key={statusOption} value={statusOption}>
+                    {statusOption}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="form-group mb-2">
             <label>Start date & time</label>
             <DatePicker
               minDate={new Date()}
-              minTime={
-                new Date(new Date(formValues.start).setHours(10, 0, 0, 0))
-              }
-              maxTime={
-                new Date(new Date(formValues.start).setHours(18, 0, 0, 0))
-              }
+              minTime={(() => {
+                const hours = parseOperatingHours(restaurant?.operatingHours);
+                const base = formValues.start ?? new Date();
+                return hours
+                  ? new Date(
+                      new Date(base).setHours(
+                        hours.open.hours,
+                        hours.open.minutes,
+                        0,
+                        0,
+                      ),
+                    )
+                  : new Date(new Date(base).setHours(10, 0, 0, 0));
+              })()}
+              maxTime={(() => {
+                const hours = parseOperatingHours(restaurant?.operatingHours);
+                const base = formValues.start ?? new Date();
+                return hours
+                  ? new Date(
+                      new Date(base).setHours(
+                        hours.close.hours,
+                        hours.close.minutes,
+                        0,
+                        0,
+                      ),
+                    )
+                  : new Date(new Date(base).setHours(18, 0, 0, 0));
+              })()}
               selected={formValues.start}
               className="form-control"
               onChange={(event) => onDateChanged(event, "start")}

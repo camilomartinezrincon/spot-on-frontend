@@ -16,6 +16,10 @@
   border-right: 1px solid #aeaeae !important;
 }
 
+.new-reservation-container {
+  max-width: 700px;
+}
+
 .icon-slot {
   display: inline-flex;
   justify-content: center;
