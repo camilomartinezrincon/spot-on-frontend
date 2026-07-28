@@ -4,6 +4,7 @@ import { CalendarPage } from "../calendar";
 import { useAuthStore } from "../hooks";
 import { useEffect } from "react";
 import { LandingPage } from "../landing";
+import { NewReservationPage } from "../reservation";
 
 export const AppRouter = () => {
   const { status, user, checkAuthToken } = useAuthStore();
@@ -28,6 +29,10 @@ export const AppRouter = () => {
       ) : (
         <>
           <Route path="/reservations" element={<CalendarPage />} />
+          <Route
+            path="/reservations/new/:restaurantId"
+            element={<NewReservationPage />}
+          />
           {isClient && <Route path="/" element={<LandingPage />} />}
           <Route
             path="/*"
