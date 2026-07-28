@@ -1,6 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { spotOnApi } from "../api";
-import { clearErrorMessage, onChecking, onLogin, onLogout } from "../store";
+import {
+  clearErrorMessage,
+  onChecking,
+  onLogin,
+  onLogout,
+  onLogoutCalendar,
+} from "../store";
 import { useCallback } from "react";
 
 export const useAuthStore = () => {
@@ -71,6 +77,7 @@ export const useAuthStore = () => {
     } catch (error) {
       localStorage.clear();
       dispatch(onLogout(error.response.data?.msg || "Expired Token"));
+      dispatch(onLogoutCalendar());
       setTimeout(() => {
         dispatch(clearErrorMessage());
       }, 10);
@@ -80,6 +87,7 @@ export const useAuthStore = () => {
   const startLogout = () => {
     localStorage.clear();
     dispatch(onLogout());
+    dispatch(onLogoutCalendar());
   };
 
   return {
