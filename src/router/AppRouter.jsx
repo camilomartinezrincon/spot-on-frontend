@@ -5,6 +5,13 @@ import { useAuthStore } from "../hooks";
 import { useEffect } from "react";
 import { LandingPage } from "../landing";
 import { NewReservationPage } from "../reservation";
+import {
+  AdminPage,
+  ClientsPage,
+  DashboardPage,
+  RestaurantsPage,
+  StaffPage,
+} from "../admin";
 
 export const AppRouter = () => {
   const { status, user, checkAuthToken } = useAuthStore();
@@ -16,6 +23,7 @@ export const AppRouter = () => {
     return <h3>Loading...</h3>;
   }
   const isClient = user?.role === "CLIENT";
+  const isAdmin = user?.role === "ADMIN";
 
   return (
     <Routes>
@@ -33,9 +41,21 @@ export const AppRouter = () => {
             element={<NewReservationPage />}
           />
           {isClient && <Route path="/" element={<LandingPage />} />}
+          {isAdmin && (
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="restaurants" element={<RestaurantsPage />} />
+              <Route path="staff" element={<StaffPage />} />
+              <Route path="clients" element={<ClientsPage />} />
+            </Route>
+          )}
           <Route
             path="/*"
-            element={<Navigate to={isClient ? "/" : "/reservations"} />}
+            element={
+              <Navigate
+                to={isClient ? "/" : isAdmin ? "/admin" : "/reservations"}
+              />
+            }
           />
         </>
       )}
