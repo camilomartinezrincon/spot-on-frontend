@@ -49,7 +49,6 @@ export const useCalendarStore = () => {
           "/events/new/reservation",
           payload,
         );
-        console.log({ data });
         dispatch(
           onAddNewEvent({
             ...calendarEvent,

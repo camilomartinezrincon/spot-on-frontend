@@ -1,18 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../hooks";
-import "./styles/NavbarComponent.css";
 import { useEffect, useState } from "react";
 import { spotOnApi } from "../../api";
+import "./styles/NavbarComponent.css";
 
 export const NavbarComponent = () => {
   const { startLogout, user } = useAuthStore();
   const [restaurantName, setRestaurantName] = useState("");
   const navigate = useNavigate();
-
-  const formatRole = (role) => {
-    if (!role) return "";
-    return role.charAt(0) + role.slice(1).toLowerCase();
-  };
 
   useEffect(() => {
     const fetchRestaurantName = async () => {
@@ -48,13 +43,6 @@ export const NavbarComponent = () => {
         <span className="navbar-brand">
           <i className="fas fa-address-card"></i>
           &nbsp; {user.fullName} - {restaurantName}
-        </span>
-      )}
-
-      {user?.role === "ADMIN" && (
-        <span className="navbar-brand">
-          <i className="fas fa-user-tie"></i>
-          &nbsp; {user.fullName} - {formatRole(user.role)}
         </span>
       )}
 

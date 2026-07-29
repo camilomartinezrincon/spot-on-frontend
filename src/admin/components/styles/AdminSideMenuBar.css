@@ -1,0 +1,31 @@
+.admin-sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background-color: #1e2129;
+  color: #cbd5e1;
+}
+
+.admin-sidebar-user {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-link {
+  color: #cbd5e1;
+}
+
+.admin-sidebar-link:hover {
+  background-color: #2a2e38;
+  color: #fff;
+}
+
+.admin-sidebar-link.active {
+  background-color: #e8edff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
