@@ -1,0 +1,9 @@
+.form-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.employee-form-cancel-btn {
+  margin-right: 19px;
+}

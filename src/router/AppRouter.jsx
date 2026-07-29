@@ -8,6 +8,8 @@ import { NewReservationPage } from "../reservation";
 import {
   AdminPage,
   ClientsPage,
+  CreateNewEmployeePage,
+  CreateNewRestaurantPage,
   DashboardPage,
   RestaurantsPage,
   StaffPage,
@@ -45,8 +47,18 @@ export const AppRouter = () => {
             <Route path="/admin" element={<AdminPage />}>
               <Route index element={<DashboardPage />} />
               <Route path="restaurants" element={<RestaurantsPage />} />
+              <Route
+                path="restaurants/new"
+                element={<CreateNewRestaurantPage />}
+              />
+              <Route
+                path="restaurants/:restaurantId"
+                element={<CreateNewRestaurantPage />}
+              />
               <Route path="staff" element={<StaffPage />} />
               <Route path="clients" element={<ClientsPage />} />
+              <Route path="staff/new" element={<CreateNewEmployeePage />} />
+              <Route path="staff/:userId" element={<CreateNewEmployeePage />} />
             </Route>
           )}
           <Route
