@@ -6,7 +6,6 @@ import {
   NavbarComponent,
   CalendarEventComponent,
   CalendarModalComponent,
-  FabAddNewComponent,
   FabDeleteComponent,
 } from "../";
 import { useUiStore, useCalendarStore, useAuthStore } from "../../hooks";
@@ -78,7 +77,6 @@ export const CalendarPage = () => {
           onSelectEvent={onSelect}
         />
         <CalendarModalComponent />
-        {/* <FabAddNewComponent /> */}
         <FabDeleteComponent />
       </div>
     </>
