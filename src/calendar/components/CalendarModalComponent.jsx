@@ -29,12 +29,11 @@ const statusOptions = [
 
 export const CalendarModalComponent = () => {
   const { isCalendarModalOpen, closeCalendarModal } = useUiStore();
-  const { activeEvent, startSavingEvent } = useCalendarStore();
+  const { events, activeEvent, startSavingEvent } = useCalendarStore();
   const { user } = useAuthStore();
   const isEmployee = user?.role === "EMPLOYEE";
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  //TODO: change this is just for testing
   const [formValues, setFormValues] = useState({
     title: "",
     notes: "",
@@ -70,6 +69,18 @@ export const CalendarModalComponent = () => {
   const isReservationConfirmedWithTable =
     !!formValues.tableNumber && formValues.status === "Confirmed Reservation";
 
+  const occupiedTables = useMemo(() => {
+    if (!formValues.start) return [];
+    const selectedDay = new Date(formValues.start).toDateString();
+    return events
+      .filter((ev) => {
+        const isSameDay = new Date(ev.start).toDateString() === selectedDay;
+        const isDifferentReservation = ev._id !== formValues._id;
+        return isSameDay && isDifferentReservation && ev.tableNumber;
+      })
+      .map((ev) => Number(ev.tableNumber));
+  }, [events, formValues.start, formValues._id]);
+
   const onDateChanged = (event, changing) => {
     setFormValues({
       ...formValues,
@@ -100,6 +111,15 @@ export const CalendarModalComponent = () => {
       Swal.fire(
         "Incorrect number of guests",
         "Check the number of guests",
+        "error",
+      );
+      return;
+    }
+
+    if (isEmployee && occupiedTables.includes(Number(formValues.tableNumber))) {
+      Swal.fire(
+        "Table already taken",
+        "Please select a different table for this reservation.",
         "error",
       );
       return;
@@ -201,8 +221,13 @@ export const CalendarModalComponent = () => {
               >
                 <option value="">Select a table</option>
                 {tableOptions.map((table) => (
-                  <option key={table} value={table}>
-                    Table {table}
+                  <option
+                    key={table}
+                    value={table}
+                    disabled={occupiedTables.includes(table)}
+                  >
+                    Table {table}{" "}
+                    {occupiedTables.includes(table) ? "(Taken)" : ""}
                   </option>
                 ))}
               </select>
