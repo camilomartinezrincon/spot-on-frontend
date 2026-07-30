@@ -99,6 +99,11 @@ export const RegisterPage = () => {
                 Sign in
               </Link>
             </p>
+            <p className="register-page-note small text-center">
+              Are you a restaurant employee? Please contact your administrator
+              for access. Clients who forgot their password should also contact
+              the administrator.
+            </p>
           </div>
         </form>
       </div>
