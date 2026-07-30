@@ -89,7 +89,7 @@ export const DashboardPage = () => {
     <>
       <h1 className="fw-bold mb-1">Dashboard</h1>
       <p className="text-muted mb-4">
-        Manage the restaurants and staff on the platform.
+        Manage the restaurants, employees and clients on the platform.
       </p>
 
       {isLoading ? (
@@ -108,7 +108,7 @@ export const DashboardPage = () => {
             <div className="col-12 col-sm-3">
               <div className="card dashboard-card">
                 <div className="card-body">
-                  <p className="text-muted small mb-1">Staff members</p>
+                  <p className="text-muted small mb-1">Employees</p>
                   <h3 className="fw-bold mb-0">{staff.length}</h3>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export const DashboardPage = () => {
           </div>
 
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="fw-bold mb-0">Staff</h5>
+            <h5 className="fw-bold mb-0">Employees</h5>
             <Link to="/admin/staff" className="small text-decoration-none">
               View All →
             </Link>
