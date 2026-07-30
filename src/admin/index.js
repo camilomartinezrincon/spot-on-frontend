@@ -7,3 +7,4 @@ export * from "./pages/Clients/ClientsPage";
 export * from "./pages/CreateNewRestaurant/CreateNewRestaurantPage";
 export * from "./pages/CreateNewEmployee/CreateNewEmployeePage";
 export * from "./pages/EditClient/EditClientPage";
+export * from "./pages/EditPassword/EditPasswordPage";

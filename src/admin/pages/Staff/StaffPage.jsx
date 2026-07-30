@@ -49,7 +49,7 @@ export const StaffPage = () => {
 
   const onDelete = (member) => {
     Swal.fire({
-      title: "Delete staff member?",
+      title: "Delete employee?",
       text: `This will permanently delete ${member.fullName}.`,
       icon: "warning",
       showCancelButton: true,
@@ -64,13 +64,13 @@ export const StaffPage = () => {
     <>
       <div className="d-flex justify-content-between align-items-start mb-1">
         <div>
-          <h1 className="fw-bold mb-1">Staff</h1>
+          <h1 className="fw-bold mb-1">Employees</h1>
           <p className="text-muted mb-4">
             People with access to a restaurant's schedule.
           </p>
         </div>
         <Link to="/admin/staff/new" className="btn btn-primary">
-          <i className="fas fa-plus me-1"></i> Add staff
+          <i className="fas fa-plus me-1"></i> Add new employee
         </Link>
       </div>
 
@@ -79,16 +79,16 @@ export const StaffPage = () => {
           type="text"
           className="form-control"
           style={{ maxWidth: "400px" }}
-          placeholder="Search staff"
+          placeholder="Search employee"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {isLoading && <p className="text-muted">Loading staff...</p>}
+      {isLoading && <p className="text-muted">Loading employees...</p>}
 
       {!isLoading && filteredStaff.length === 0 && (
-        <p className="text-muted">No staff match your search.</p>
+        <p className="text-muted">No employee match your search.</p>
       )}
 
       <div className="card staff-card">
