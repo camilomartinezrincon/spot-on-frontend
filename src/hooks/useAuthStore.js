@@ -8,10 +8,25 @@ import {
   onLogoutCalendar,
 } from "../store";
 import { useCallback } from "react";
+import Swal from "sweetalert2";
 
 export const useAuthStore = () => {
   const { status, user, errorMessage } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+
+  const startLoadingUsers = async () => {
+    try {
+      const { data } = await spotOnApi.get("/auth/users");
+      return data.usr || [];
+    } catch (error) {
+      Swal.fire(
+        "Error loading users",
+        error.response?.data?.msg || "Something went wrong, please try again",
+        "error",
+      );
+      throw error;
+    }
+  };
 
   const startLogin = async ({ email, password }) => {
     dispatch(onChecking());
@@ -98,5 +113,6 @@ export const useAuthStore = () => {
     startRegister,
     startLogout,
     checkAuthToken,
+    startLoadingUsers,
   };
 };

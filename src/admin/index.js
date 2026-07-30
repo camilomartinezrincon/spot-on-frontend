@@ -6,3 +6,4 @@ export * from "./pages/Staff/StaffPage";
 export * from "./pages/Clients/ClientsPage";
 export * from "./pages/CreateNewRestaurant/CreateNewRestaurantPage";
 export * from "./pages/CreateNewEmployee/CreateNewEmployeePage";
+export * from "./pages/EditClient/EditClientPage";

@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { spotOnApi } from "../../../api";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useRestaurantStore, useStaffStore } from "../../../hooks";
 import "./CreateNewEmployeePage.css";
-
-const statusOptions = ["ACTIVE", "INACTIVE"];
 
 export const CreateNewEmployeePage = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
   const isEditing = Boolean(userId);
+  const { startSavingStaff, startLoadingStaff } = useStaffStore();
+  const { restaurants, startLoadingRestaurants } = useRestaurantStore();
   const [isLoading, setIsLoading] = useState(isEditing);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const statusOptions = ["ACTIVE", "INACTIVE"];
+
+  const generateSixDigitPassword = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
 
   const [formValues, setFormValues] = useState({
     fullName: "",
@@ -18,13 +25,19 @@ export const CreateNewEmployeePage = () => {
     password: "",
     role: "EMPLOYEE",
     status: "ACTIVE",
+    restaurant: "",
   });
+
+  //INFO: Load restaurants info
+  useEffect(() => {
+    startLoadingRestaurants();
+  }, [startLoadingRestaurants]);
 
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const { data } = await spotOnApi.get("/auth/users");
-        const employee = (data.usr || []).find((u) => u._id === userId);
+        const employees = await startLoadingStaff();
+        const employee = employees.find((u) => u._id === userId);
         if (!employee) {
           Swal.fire(
             "Not found",
@@ -34,25 +47,15 @@ export const CreateNewEmployeePage = () => {
           navigate("/admin/staff");
           return;
         }
-        setFormValues({
-          fullName: employee.fullName,
-          email: employee.email,
-          password: employee.password,
-          role: employee.role,
-          status: employee.status || "ACTIVE",
-        });
+        setFormValues({ ...employee });
       } catch (error) {
-        Swal.fire(
-          "Error loading staff member",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
+        console.error({ error });
       } finally {
         setIsLoading(false);
       }
     };
     if (isEditing) fetchEmployee();
-  }, [userId, isEditing, navigate]);
+  }, [userId, isEditing, startLoadingStaff, navigate]);
 
   const onInputChanged = ({ target }) => {
     setFormValues({
@@ -61,37 +64,39 @@ export const CreateNewEmployeePage = () => {
     });
   };
 
+  const onGeneratePassword = () => {
+    setFormValues({
+      ...formValues,
+      password: generateSixDigitPassword(),
+    });
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
 
-    try {
-      if (isEditing) {
-        await spotOnApi.put(`/auth/update/user/${userId}`, {
-          fullName: formValues.fullName,
-          email: formValues.email,
-          status: formValues.status,
-        });
-      } else {
-        await spotOnApi.post("/auth/new/employee", {
-          fullName: formValues.fullName,
-          email: formValues.email,
-          password: formValues.password,
-        });
-      }
-      await Swal.fire({
-        title: isEditing ? "Staff member updated" : "Staff member created",
-        icon: "success",
-        confirmButtonText: "Back to staff",
-      });
-      navigate("/admin/staff");
-    } catch (error) {
+    if (!isEditing && !formValues.password) {
       Swal.fire(
-        isEditing
-          ? "Error updating staff member"
-          : "Error creating staff member",
-        error.response?.data?.msg || "Something went wrong, please try again",
+        "Missing password",
+        "Generate a temporary password before saving.",
         "error",
       );
+      return;
+    }
+
+    if (!isEditing && !formValues.restaurant) {
+      Swal.fire(
+        "Missing restaurant",
+        "Select which restaurant this employee is assigned to.",
+        "error",
+      );
+      return;
+    }
+
+    try {
+      await startSavingStaff(formValues);
+      navigate("/admin/staff");
+    } catch (error) {
+      console.error({ error });
     }
   };
 
@@ -110,102 +115,152 @@ export const CreateNewEmployeePage = () => {
       </button>
 
       <h1 className="fw-bold mb-1">
-        {isEditing ? "Edit staff member" : "Add staff member"}
+        {isEditing ? "Edit Employee" : "Add new employee"}
       </h1>
       <p className="text-muted mb-4">
         {isEditing
-          ? "Update this staff member's information."
-          : "Give a staff member access to a restaurant's schedule."}
+          ? "Update this employee's information."
+          : "Give an employee access to a restaurant's schedule."}
       </p>
 
       <form onSubmit={onSubmit}>
-        <div className="form-group mb-3">
-          <label>Full name</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="e.g. Maria Gomez"
-            name="fullName"
-            value={formValues.fullName}
-            onChange={onInputChanged}
-            required
-          />
-        </div>
-
-        <div className="form-group mb-3">
-          <label>Email</label>
-          <input
-            type="email"
-            className="form-control"
-            placeholder="name@restaurant.com"
-            name="email"
-            value={formValues.email}
-            onChange={onInputChanged}
-            required
-          />
-        </div>
-
-        {isEditing ? (
-          <div className="form-group mb-3">
-            <label>Password</label>
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <label>Full name</label>
             <input
-              type="password"
+              type="text"
               className="form-control"
-              value={formValues.password}
-              readOnly
-            />
-            <button
-              type="button"
-              className="btn btn-link p-0 mt-1 small"
-              onClick={() => navigate(`/admin/staff/${userId}/change-password`)}
-            >
-              Change password
-            </button>
-          </div>
-        ) : (
-          <div className="form-group mb-3">
-            <label>Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Set a temporary password"
-              name="password"
-              value={formValues.password}
+              placeholder="e.g. Maria Gomez"
+              name="fullName"
+              value={formValues.fullName}
               onChange={onInputChanged}
               required
             />
           </div>
-        )}
-
-        <div className="form-group mb-3">
-          <label>Role</label>
-          <input
-            type="text"
-            className="form-control"
-            value={
-              formValues.role.charAt(0) + formValues.role.slice(1).toLowerCase()
-            }
-            readOnly
-          />
-        </div>
-
-        <div className="row mb-4">
           <div className="col-md-6">
-            <label>Status</label>
-            <select
+            <label>Email</label>
+            <input
+              type="email"
               className="form-control"
-              name="status"
-              value={formValues.status}
+              placeholder="name@restaurant.com"
+              name="email"
+              value={formValues.email}
               onChange={onInputChanged}
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status.charAt(0) + status.slice(1).toLowerCase()}
-                </option>
-              ))}
-            </select>
+              required
+            />
           </div>
         </div>
+
+        {isEditing ? (
+          <>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label>Restaurant</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={
+                    restaurants.find((r) => r._id === formValues.restaurant)
+                      ?.restaurantName || ""
+                  }
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6">
+                <label>Status</label>
+                <select
+                  className="form-control"
+                  name="status"
+                  value={formValues.status}
+                  onChange={onInputChanged}
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0) + status.slice(1).toLowerCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label>Role</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value="Employee"
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6">
+                <label>Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  value="••••••"
+                  readOnly
+                />
+                <Link
+                  to={`/admin/staff/${userId}/change-password`}
+                  className="small text-decoration-none"
+                >
+                  Change password
+                </Link>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="row mb-4">
+            <div className="col-md-6">
+              <label>Restaurant</label>
+              <select
+                className="form-control"
+                name="restaurant"
+                value={formValues.restaurant}
+                onChange={onInputChanged}
+                required
+              >
+                <option value="">Select a restaurant</option>
+                {restaurants.map((restaurant) => (
+                  <option key={restaurant._id} value={restaurant._id}>
+                    {restaurant.restaurantName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-6">
+              <label>Password</label>
+              <div className="d-flex align-items-center">
+                <div className="employee-password-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-control employee-password-input"
+                    value={formValues.password}
+                    placeholder="Not generated yet"
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-link employee-password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    <i
+                      className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+                    ></i>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary employee-generate-btn"
+                  onClick={onGeneratePassword}
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="d-flex justify-content-end">
           <button
@@ -216,7 +271,7 @@ export const CreateNewEmployeePage = () => {
             Cancel
           </button>
           <button type="submit" className="btn btn-primary">
-            {isEditing ? "Save changes" : "Save staff member"}
+            {isEditing ? "Save Changes" : "Save Employee"}
           </button>
         </div>
       </form>

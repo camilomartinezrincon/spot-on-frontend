@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { spotOnApi } from "../../../api";
 import Swal from "sweetalert2";
+import {
+  useAuthStore,
+  useRestaurantStore,
+  useStaffStore,
+} from "../../../hooks";
 import "./DashboardPage.css";
 
 const restaurantStatusClass = {
@@ -11,30 +15,25 @@ const restaurantStatusClass = {
 };
 
 export const DashboardPage = () => {
-  const [restaurants, setRestaurants] = useState([]);
-  const [staff, setStaff] = useState([]);
+  const { startLoadingUsers } = useAuthStore();
+  const { restaurants, startLoadingRestaurants } = useRestaurantStore();
+  const { staff, startLoadingStaff } = useStaffStore();
   const [clients, setClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [restaurantsRes, usersRes] = await Promise.all([
-          spotOnApi.get("/restaurants/restaurants"),
-          spotOnApi.get("/auth/users"),
+        const [users] = await Promise.all([
+          startLoadingUsers(),
+          startLoadingRestaurants(),
+          startLoadingStaff(),
         ]);
-        setRestaurants(restaurantsRes.data.restaurant || []);
-        setStaff(
-          (usersRes.data.usr || []).filter((u) => u.role === "EMPLOYEE"),
-        );
-        setClients(
-          (usersRes.data.usr || []).filter((u) => u.role === "CLIENT"),
-        );
+        setClients(users.filter((u) => u.role === "CLIENT"));
       } catch (error) {
         Swal.fire(
           "Error loading dashboard",
-          error.response?.data?.msg ||
-            "Something went wrong, please try again",
+          error.response?.data?.msg || "Something went wrong, please try again",
           "error",
         );
       } finally {
@@ -42,7 +41,7 @@ export const DashboardPage = () => {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [startLoadingUsers, startLoadingRestaurants, startLoadingStaff]);
 
   const activeRestaurantsCount = useMemo(
     () => restaurants.filter((r) => r.restaurantStatus === "ACTIVE").length,
@@ -57,6 +56,13 @@ export const DashboardPage = () => {
     return map;
   }, [restaurants]);
 
+  const formatPostalCode = (postalCode) => {
+    if (!postalCode) return "";
+    const cleaned = postalCode.replace(/\s/g, "").toUpperCase();
+    if (cleaned.length < 6) return cleaned;
+    return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+  };
+
   const formatStatus = (status) => {
     if (!status) return "";
     return status.charAt(0) + status.slice(1).toLowerCase();
@@ -69,7 +75,14 @@ export const DashboardPage = () => {
 
   const formatAddress = (address) => {
     if (!address) return "";
-    return `${address.street}, ${address.city}, ${address.province} ${address.postalCode}`;
+    return `${address.street}, ${address.city}, ${address.province} ${formatPostalCode(address.postalCode)}`;
+  };
+
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "";
+    const digits = phone.replace(/\D/g, "").slice(0, 10);
+    if (digits.length < 10) return phone;
+    return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
   };
 
   return (
@@ -143,6 +156,9 @@ export const DashboardPage = () => {
                     </p>
                     <p className="text-muted small mb-0">
                       {formatAddress(restaurant.restaurantAddress)}
+                    </p>
+                    <p className="text-muted small mb-0">
+                      {formatPhoneNumber(restaurant.restaurantPhoneNum)}
                     </p>
                   </div>
                   <span

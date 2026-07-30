@@ -1,38 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useRestaurantStore, useStaffStore } from "../../../hooks";
 import "./StaffPage.css";
-import { spotOnApi } from "../../../api";
 
 export const StaffPage = () => {
-  const [staff, setStaff] = useState([]);
-  const [restaurants, setRestaurants] = useState([]);
+  const { staff, startLoadingStaff, startDeletingStaff } = useStaffStore();
+  const { restaurants, startLoadingRestaurants } = useRestaurantStore();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const staffStatusClass = {
+    ACTIVE: "staff-badge-active",
+    INACTIVE: "staff-badge-inactive",
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return "";
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
-    const fetchStaffAndRestaurants = async () => {
-      try {
-        const [usersRes, restaurantsRes] = await Promise.all([
-          spotOnApi.get("/auth/users"),
-          spotOnApi.get("/restaurants/restaurants"),
-        ]);
-        setStaff(
-          (usersRes.data.usr || []).filter((u) => u.role === "EMPLOYEE"),
-        );
-        setRestaurants(restaurantsRes.data.restaurant || []);
-      } catch (error) {
-        Swal.fire(
-          "Error loading staff",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      } finally {
-        setIsLoading(false);
-      }
+    const load = async () => {
+      await Promise.all([startLoadingStaff(), startLoadingRestaurants()]);
+      setIsLoading(false);
     };
-    fetchStaffAndRestaurants();
-  }, []);
+    load();
+  }, [startLoadingStaff, startLoadingRestaurants]);
 
   const restaurantNameById = useMemo(() => {
     const map = {};
@@ -61,18 +55,8 @@ export const StaffPage = () => {
       showCancelButton: true,
       confirmButtonText: "Delete",
       confirmButtonColor: "#dc2626",
-    }).then(async (result) => {
-      if (!result.isConfirmed) return;
-      try {
-        await spotOnApi.delete(`/auth/delete/user/${member._id}`);
-        setStaff((prev) => prev.filter((s) => s._id !== member._id));
-      } catch (error) {
-        Swal.fire(
-          "Error deleting staff member",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      }
+    }).then((result) => {
+      if (result.isConfirmed) startDeletingStaff(member._id);
     });
   };
 
@@ -128,8 +112,10 @@ export const StaffPage = () => {
                 </p>
               </div>
               <div className="d-flex align-items-center">
-                <span className="staff-status-badge staff-badge-active staff-badge-spacing">
-                  Active
+                <span
+                  className={`staff-status-badge staff-badge-spacing ${staffStatusClass[member.status]}`}
+                >
+                  {formatStatus(member.status)}
                 </span>
                 <button
                   type="button"
