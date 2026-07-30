@@ -12,6 +12,7 @@ import {
   CreateNewRestaurantPage,
   DashboardPage,
   EditClientPage,
+  EditPasswordPage,
   RestaurantsPage,
   StaffPage,
 } from "../admin";
@@ -61,6 +62,26 @@ export const AppRouter = () => {
               <Route path="clients/:userId" element={<EditClientPage />} />
               <Route path="staff/new" element={<CreateNewEmployeePage />} />
               <Route path="staff/:userId" element={<CreateNewEmployeePage />} />
+              <Route
+                path="staff/:userId/change-password"
+                element={
+                  <EditPasswordPage
+                    backPath="/admin/staff"
+                    label="staff"
+                    singularLabel="staff member"
+                  />
+                }
+              />
+              <Route
+                path="clients/:userId/change-password"
+                element={
+                  <EditPasswordPage
+                    backPath="/admin/clients"
+                    label="clients"
+                    singularLabel="client"
+                  />
+                }
+              />
             </Route>
           )}
           <Route

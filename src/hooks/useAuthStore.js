@@ -105,6 +105,24 @@ export const useAuthStore = () => {
     dispatch(onLogoutCalendar());
   };
 
+  const startChangingPassword = async (userId, password) => {
+    try {
+      await spotOnApi.put(`/auth/update/user/password/${userId}`, { password });
+      await Swal.fire({
+        title: "Password updated",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      Swal.fire(
+        "Error updating password",
+        error.response?.data?.msg || "Something went wrong, please try again",
+        "error",
+      );
+      throw error;
+    }
+  };
+
   return {
     status,
     user,
@@ -114,5 +132,6 @@ export const useAuthStore = () => {
     startLogout,
     checkAuthToken,
     startLoadingUsers,
+    startChangingPassword,
   };
 };

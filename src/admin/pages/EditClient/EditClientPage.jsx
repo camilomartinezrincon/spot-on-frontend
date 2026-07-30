@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useClientStore } from "../../../hooks";
 import "./EditClientPage.css";
@@ -122,6 +122,23 @@ export const EditClientPage = () => {
                 </option>
               ))}
             </select>
+          </div>
+        </div>
+        <div className="row mb-4">
+          <div className="col-md-6">
+            <label>Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value="••••••"
+              readOnly
+            />
+            <Link
+              to={`/admin/clients/${userId}/change-password`}
+              className="small text-decoration-none"
+            >
+              Change password
+            </Link>
           </div>
         </div>
 

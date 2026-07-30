@@ -5,7 +5,7 @@ import "./styles/AdminSideMenuBar.css";
 const navItems = [
   { label: "Dashboard", path: "/admin", icon: "fa-table-columns" },
   { label: "Restaurants", path: "/admin/restaurants", icon: "fa-store" },
-  { label: "Staff", path: "/admin/staff", icon: "fa-users" },
+  { label: "Employees", path: "/admin/staff", icon: "fa-users" },
   { label: "Clients", path: "/admin/clients", icon: "fa-user-group" },
 ];
 

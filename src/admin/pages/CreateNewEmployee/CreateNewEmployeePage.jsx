@@ -101,7 +101,7 @@ export const CreateNewEmployeePage = () => {
   };
 
   if (isLoading) {
-    return <p className="text-muted">Loading staff member...</p>;
+    return <p className="text-muted">Loading employees...</p>;
   }
 
   return (
@@ -111,7 +111,7 @@ export const CreateNewEmployeePage = () => {
         className="btn btn-link p-0 mb-3 text-muted text-decoration-none"
         onClick={() => navigate("/admin/staff")}
       >
-        <i className="fa fa-arrow-left me-1"></i> Back to staff
+        <i className="fa fa-arrow-left me-1"></i> Back to employees
       </button>
 
       <h1 className="fw-bold mb-1">
