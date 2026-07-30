@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { spotOnApi } from "../../../api";
 import Swal from "sweetalert2";
 import "./CreateNewRestaurantPage.css";
+import { useRestaurantStore } from "../../../hooks";
 
 const priceRangeOptions = [
   "$ — budget",
@@ -12,19 +12,19 @@ const priceRangeOptions = [
 ];
 
 const provinceOptions = [
-  "AB",
-  "BC",
-  "MB",
-  "NB",
-  "NL",
-  "NS",
-  "NT",
-  "NU",
-  "ON",
-  "PE",
-  "QC",
-  "SK",
-  "YT",
+  { code: "AB", name: "Alberta" },
+  { code: "BC", name: "British Columbia" },
+  { code: "MB", name: "Manitoba" },
+  { code: "NB", name: "New Brunswick" },
+  { code: "NL", name: "Newfoundland and Labrador" },
+  { code: "NS", name: "Nova Scotia" },
+  { code: "NT", name: "Northwest Territories" },
+  { code: "NU", name: "Nunavut" },
+  { code: "ON", name: "Ontario" },
+  { code: "PE", name: "Prince Edward Island" },
+  { code: "QC", name: "Quebec" },
+  { code: "SK", name: "Saskatchewan" },
+  { code: "YT", name: "Yukon" },
 ];
 
 const statusOptions = ["ACTIVE", "INACTIVE", "CLOSED"];
@@ -33,17 +33,19 @@ export const CreateNewRestaurantPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
   const isEditing = Boolean(restaurantId);
+  const { startSavingRestaurant, startLoadingRestaurant } =
+    useRestaurantStore();
   const [isLoading, setIsLoading] = useState(isEditing);
 
   const [formValues, setFormValues] = useState({
     restaurantName: "",
     cuisineType: "",
-    priceRange: "$$ — moderate",
+    priceRange: "",
     restaurantPhoneNum: "",
     restaurantAddress: {
       street: "",
       city: "",
-      province: "ON",
+      province: "",
       postalCode: "",
     },
     operatingHours: "",
@@ -55,38 +57,16 @@ export const CreateNewRestaurantPage = () => {
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const { data } = await spotOnApi.get(
-          `/restaurants/restaurant/${restaurantId}`,
-        );
-        const restaurant = data.restaurant;
-        setFormValues({
-          restaurantName: restaurant.restaurantName,
-          cuisineType: restaurant.cuisineType,
-          priceRange: restaurant.priceRange,
-          restaurantPhoneNum: restaurant.restaurantPhoneNum,
-          restaurantAddress: {
-            street: restaurant.restaurantAddress?.street || "",
-            city: restaurant.restaurantAddress?.city || "",
-            province: restaurant.restaurantAddress?.province || "ON",
-            postalCode: restaurant.restaurantAddress?.postalCode || "",
-          },
-          operatingHours: restaurant.operatingHours,
-          maxPartySize: restaurant.maxPartySize,
-          restaurantDescription: restaurant.restaurantDescription || "",
-          restaurantStatus: restaurant.restaurantStatus,
-        });
+        const restaurant = await startLoadingRestaurant(restaurantId);
+        setFormValues({ ...restaurant });
       } catch (error) {
-        Swal.fire(
-          "Error loading restaurant",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
+        console.error({ error });
       } finally {
         setIsLoading(false);
       }
     };
     if (isEditing) fetchRestaurant();
-  }, [restaurantId, isEditing]);
+  }, [restaurantId, isEditing, startLoadingRestaurant]);
 
   const onInputChanged = ({ target }) => {
     setFormValues({
@@ -105,35 +85,28 @@ export const CreateNewRestaurantPage = () => {
     });
   };
 
+  const formatPhoneNumber = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length < 10) return value;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const formatPostalCode = (value) => {
+    const cleaned = value
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .toUpperCase()
+      .slice(0, 6);
+    if (cleaned.length < 6) return cleaned;
+    return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
-
-    const payload = {
-      ...formValues,
-      maxPartySize: Number(formValues.maxPartySize),
-    };
-
     try {
-      if (isEditing) {
-        await spotOnApi.put(
-          `/restaurants/update/restaurant/${restaurantId}`,
-          payload,
-        );
-      } else {
-        await spotOnApi.post("/restaurants/new/restaurant", payload);
-      }
-      await Swal.fire({
-        title: isEditing ? "Restaurant updated" : "Restaurant created",
-        icon: "success",
-        confirmButtonText: "Back to restaurants",
-      });
+      await startSavingRestaurant(formValues);
       navigate("/admin/restaurants");
     } catch (error) {
-      Swal.fire(
-        isEditing ? "Error updating restaurant" : "Error creating restaurant",
-        error.response?.data?.msg || "Something went wrong, please try again",
-        "error",
-      );
+      console.error({ error });
     }
   };
 
@@ -194,7 +167,9 @@ export const CreateNewRestaurantPage = () => {
               name="priceRange"
               value={formValues.priceRange}
               onChange={onInputChanged}
+              required
             >
+              <option value="">Select a price range</option>
               {priceRangeOptions.map((price) => (
                 <option key={price} value={price}>
                   {price}
@@ -209,10 +184,18 @@ export const CreateNewRestaurantPage = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="(416) 555-0142"
+            placeholder="e.g. (416) 555-0142"
             name="restaurantPhoneNum"
             value={formValues.restaurantPhoneNum}
             onChange={onInputChanged}
+            onBlur={() =>
+              setFormValues({
+                ...formValues,
+                restaurantPhoneNum: formatPhoneNumber(
+                  formValues.restaurantPhoneNum,
+                ),
+              })
+            }
             required
           />
         </div>
@@ -222,7 +205,7 @@ export const CreateNewRestaurantPage = () => {
           <input
             type="text"
             className="form-control mb-2"
-            placeholder="24 Main St"
+            placeholder="e.g. 24 Main St"
             name="street"
             value={formValues.restaurantAddress.street}
             onChange={onAddressChanged}
@@ -236,7 +219,7 @@ export const CreateNewRestaurantPage = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="Toronto"
+              placeholder="e.g. Toronto"
               name="city"
               value={formValues.restaurantAddress.city}
               onChange={onAddressChanged}
@@ -250,10 +233,12 @@ export const CreateNewRestaurantPage = () => {
               name="province"
               value={formValues.restaurantAddress.province}
               onChange={onAddressChanged}
+              required
             >
+              <option value="">Select a province</option>
               {provinceOptions.map((province) => (
-                <option key={province} value={province}>
-                  {province}
+                <option key={province.code} value={province.code}>
+                  {province.name}
                 </option>
               ))}
             </select>
@@ -263,10 +248,21 @@ export const CreateNewRestaurantPage = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="M5V 2T6"
+              placeholder="e.g. M5V 2T6"
               name="postalCode"
               value={formValues.restaurantAddress.postalCode}
               onChange={onAddressChanged}
+              onBlur={() =>
+                setFormValues({
+                  ...formValues,
+                  restaurantAddress: {
+                    ...formValues.restaurantAddress,
+                    postalCode: formatPostalCode(
+                      formValues.restaurantAddress.postalCode,
+                    ),
+                  },
+                })
+              }
               required
             />
           </div>
@@ -278,7 +274,7 @@ export const CreateNewRestaurantPage = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="Mon-Sun, 11am-10pm"
+              placeholder="e.g. Mon-Sun, 11am-10pm"
               name="operatingHours"
               value={formValues.operatingHours}
               onChange={onInputChanged}
@@ -291,7 +287,7 @@ export const CreateNewRestaurantPage = () => {
               type="number"
               min="1"
               className="form-control"
-              placeholder="8"
+              placeholder="e.g. 8"
               name="maxPartySize"
               value={formValues.maxPartySize}
               onChange={onInputChanged}
@@ -340,7 +336,7 @@ export const CreateNewRestaurantPage = () => {
             Cancel
           </button>
           <button type="submit" className="btn btn-primary">
-            {isEditing ? "Save changes" : "Save restaurant"}
+            {isEditing ? "Save Changes" : "Save Restaurant"}
           </button>
         </div>
       </form>

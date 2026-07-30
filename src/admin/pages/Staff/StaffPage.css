@@ -33,3 +33,8 @@
 .staff-delete-btn {
   margin-right: 19px;
 }
+
+.staff-badge-inactive {
+  background-color: #fee2e2;
+  color: #dc2626;
+}

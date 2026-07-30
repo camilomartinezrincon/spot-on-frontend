@@ -1,31 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useClientStore } from "../../../hooks";
 import "./ClientsPage.css";
-import { spotOnApi } from "../../../api";
 
 export const ClientsPage = () => {
-  const [clients, setClients] = useState([]);
+  const { clients, startLoadingClients, startDeletingClient } =
+    useClientStore();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const clientStatusClass = {
+    ACTIVE: "clients-badge-active",
+    INACTIVE: "clients-badge-inactive",
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return "";
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
+  const formatRole = (role) => {
+    if (!role) return "";
+    return role.charAt(0) + role.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const { data } = await spotOnApi.get("/auth/users");
-        setClients((data.usr || []).filter((u) => u.role === "CLIENT"));
-      } catch (error) {
-        Swal.fire(
-          "Error loading clients",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      } finally {
-        setIsLoading(false);
-      }
+    const load = async () => {
+      await startLoadingClients();
+      setIsLoading(false);
     };
-    fetchClients();
-  }, []);
+    load();
+  }, [startLoadingClients]);
 
   const filteredClients = useMemo(() => {
     return clients.filter((client) =>
@@ -41,18 +47,8 @@ export const ClientsPage = () => {
       showCancelButton: true,
       confirmButtonText: "Delete",
       confirmButtonColor: "#dc2626",
-    }).then(async (result) => {
-      if (!result.isConfirmed) return;
-      try {
-        await spotOnApi.delete(`/auth/delete/user/${client._id}`);
-        setClients((prev) => prev.filter((c) => c._id !== client._id));
-      } catch (error) {
-        Swal.fire(
-          "Error deleting client",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      }
+    }).then((result) => {
+      if (result.isConfirmed) startDeletingClient(client._id);
     });
   };
 
@@ -86,12 +82,19 @@ export const ClientsPage = () => {
               className="list-group-item clients-list-item d-flex align-items-center justify-content-between"
             >
               <div>
-                <p className="mb-0 fw-semibold">{client.fullName}</p>
+                <p className="mb-0 fw-semibold">
+                  {client.fullName} ·{" "}
+                  <span className="text-muted fw-normal">
+                    {formatRole(client.role)}
+                  </span>
+                </p>
                 <p className="text-muted small mb-0">{client.email}</p>
               </div>
               <div className="d-flex align-items-center">
-                <span className="clients-status-badge clients-badge-active clients-badge-spacing">
-                  Active
+                <span
+                  className={`clients-status-badge clients-badge-spacing ${clientStatusClass[client.status?.toUpperCase()]}`}
+                >
+                  {formatStatus(client.status)}
                 </span>
                 <button
                   type="button"

@@ -11,6 +11,7 @@ import {
   CreateNewEmployeePage,
   CreateNewRestaurantPage,
   DashboardPage,
+  EditClientPage,
   RestaurantsPage,
   StaffPage,
 } from "../admin";
@@ -57,6 +58,7 @@ export const AppRouter = () => {
               />
               <Route path="staff" element={<StaffPage />} />
               <Route path="clients" element={<ClientsPage />} />
+              <Route path="clients/:userId" element={<EditClientPage />} />
               <Route path="staff/new" element={<CreateNewEmployeePage />} />
               <Route path="staff/:userId" element={<CreateNewEmployeePage />} />
             </Route>

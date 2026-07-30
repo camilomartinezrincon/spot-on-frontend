@@ -30,6 +30,11 @@
   color: #16a34a;
 }
 
+.clients-badge-inactive {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
 .clients-delete-btn {
   margin-right: 19px;
 }

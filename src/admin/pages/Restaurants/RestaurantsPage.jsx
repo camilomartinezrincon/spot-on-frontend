@@ -1,47 +1,52 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { spotOnApi } from "../../../api";
 import Swal from "sweetalert2";
 import "./RestaurantsPage.css";
-
-const restaurantStatusClass = {
-  ACTIVE: "restaurants-badge-active",
-  INACTIVE: "restaurants-badge-inactive",
-  CLOSED: "restaurants-badge-closed",
-};
-
-const formatStatus = (status) => {
-  if (!status) return "";
-  return status.charAt(0) + status.slice(1).toLowerCase();
-};
-
-const formatAddress = (address) => {
-  if (!address) return "";
-  return `${address.street}, ${address.city}, ${address.province} ${address.postalCode}`;
-};
+import { useRestaurantStore } from "../../../hooks";
 
 export const RestaurantsPage = () => {
-  const [restaurants, setRestaurants] = useState([]);
+  const { restaurants, startLoadingRestaurants, startDeletingRestaurant } =
+    useRestaurantStore();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const restaurantStatusClass = {
+    ACTIVE: "restaurants-badge-active",
+    INACTIVE: "restaurants-badge-inactive",
+    CLOSED: "restaurants-badge-closed",
+  };
+
+  const formatPostalCode = (postalCode) => {
+    if (!postalCode) return "";
+    const cleaned = postalCode.replace(/\s/g, "").toUpperCase();
+    if (cleaned.length < 6) return cleaned;
+    return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return "";
+    return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
+  const formatAddress = (address) => {
+    if (!address) return "";
+    return `${address.street}, ${address.city}, ${address.province} ${formatPostalCode(address.postalCode)}`;
+  };
+
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "";
+    const digits = phone.replace(/\D/g, "").slice(0, 10);
+    if (digits.length < 10) return phone;
+    return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  };
+
   useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const { data } = await spotOnApi.get("/restaurants/restaurants");
-        setRestaurants(data.restaurant || []);
-      } catch (error) {
-        Swal.fire(
-          "Error loading restaurants",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      } finally {
-        setIsLoading(false);
-      }
+    const load = async () => {
+      await startLoadingRestaurants();
+      setIsLoading(false);
     };
-    fetchRestaurants();
-  }, []);
+    load();
+  }, [startLoadingRestaurants]);
 
   const filteredRestaurants = useMemo(() => {
     return restaurants.filter((restaurant) =>
@@ -59,20 +64,8 @@ export const RestaurantsPage = () => {
       showCancelButton: true,
       confirmButtonText: "Delete",
       confirmButtonColor: "#dc2626",
-    }).then(async (result) => {
-      if (!result.isConfirmed) return;
-      try {
-        await spotOnApi.delete(
-          `/restaurants/delete/restaurant/${restaurant._id}`,
-        );
-        setRestaurants((prev) => prev.filter((r) => r._id !== restaurant._id));
-      } catch (error) {
-        Swal.fire(
-          "Error deleting restaurant",
-          error.response?.data?.msg || "Something went wrong, please try again",
-          "error",
-        );
-      }
+    }).then((result) => {
+      if (result.isConfirmed) startDeletingRestaurant(restaurant._id);
     });
   };
 
@@ -123,6 +116,9 @@ export const RestaurantsPage = () => {
                 </p>
                 <p className="text-muted small mb-0">
                   {formatAddress(restaurant.restaurantAddress)}
+                </p>
+                <p className="text-muted small mb-0">
+                  {formatPhoneNumber(restaurant.restaurantPhoneNum)}
                 </p>
               </div>
               <div className="d-flex align-items-center">
