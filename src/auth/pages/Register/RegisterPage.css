@@ -56,3 +56,9 @@
   font-weight: bold;
   color: #0062cc;
 }
+
+.register-page-note {
+  margin-top: 8px;
+  max-width: 320px;
+  color: #fff;
+}
